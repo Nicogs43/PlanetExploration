@@ -10,45 +10,44 @@ import jade.lang.acl.MessageTemplate;
 import jade.wrapper.StaleProxyException;
 
 public class GroundControl extends Agent {
-    private int targetX, targetY;
+    private int targetX, targetY = 0;
     private Scanner scanner = new Scanner(System.in);
 
     protected void setup() {
         System.out.println("Hello! Ground Control: " + getAID().getName() + " is ready.");
         // Retrieving target position from arguments
-        Object[] args = getArguments();
-        if (args != null && args.length > 0) {
-            String coordinates = "";
-            for (Object arg : args) {
-                System.out.println("Argument: " + arg);
-                coordinates += arg.toString() + ",";
-
-            }
-            coordinates = coordinates.substring(0, coordinates.length() - 1);
-            try {
-                String[] parts = coordinates.split(",");
+        boolean validTarget = false;    
+        // Loop until valid coordinates are provided
+        while (!validTarget) {
+            System.out.println("Please enter target coordinates in the format 'x,y':");
+            String input = scanner.nextLine();  // Read user input from console
+    
+            if (input != null && !input.isEmpty()) {
+                String[] parts = input.split(",");
                 if (parts.length == 2) { // Ensure there are exactly two parts
-                    targetX = Integer.parseInt(parts[0].trim());
-                    targetY = Integer.parseInt(parts[1].trim());
-                    System.out.println("Target coordinates set to: (" + targetX + "," + targetY + ")");
+                    try {
+                        targetX = Integer.parseInt(parts[0].trim());
+                        targetY = Integer.parseInt(parts[1].trim());
+                        validTarget = true; // Set the flag to true to break the loop
+                    } catch (NumberFormatException e) {
+                        System.out.println("Failed to parse coordinates. Ensure they are integers.");
+                    }
                 } else {
                     System.out.println("Invalid coordinates format. Expected format: 'x,y'");
                 }
-            } catch (NumberFormatException e) {
-                System.out.println("Failed to parse coordinates. Ensure they are integers.");
+            } else {
+                System.out.println("No input detected. Please enter target coordinates.");
             }
-        } else {
-            System.out.println("No coordinates provided. Please pass target coordinates.");
         }
+        System.out.println("Target coordinates set to: (" + targetX + "," + targetY + ")");
+    
 
         addBehaviour(new OneShotBehaviour(this) {
             public void action() {
-                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                msg.addReceiver(new jade.core.AID("rover", jade.core.AID.ISLOCALNAME));
-                msg.setContent(targetX + "," + targetY); // Example coordinates
-                send(msg);
+                sendNewTarget(targetX, targetY);
             }
         });
+
         addBehaviour(new MessageReceiver());
         addBehaviour(new finishedDigging());
         addBehaviour(new receiveTheAnalysis());
@@ -69,7 +68,7 @@ public class GroundControl extends Agent {
             System.err.println("An unexpected error occurred during container shutdown.");
             e.printStackTrace();
         }
- */
+        */
         System.out.println("Ground Control agent " + getAID().getName() + " has shut down.");
     }
 

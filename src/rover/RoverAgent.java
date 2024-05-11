@@ -24,13 +24,12 @@ public class RoverAgent extends Agent {
         x = new Random().nextInt(grid.getWidth());
         y = new Random().nextInt(grid.getHeight());
 
-        System.out.println("Hello! Rover-agent " + getAID().getName() + " is ready at position (" + x + "," + y + ").");
-
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
                 MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
+                    System.out.println("Hello! Rover-agent " + getAID().getName() + " is ready at position (" + x + "," + y + ").");
                     String content = msg.getContent();
                     if (content.contains(",")) { // Assuming coordinates are sent in "x,y" format
                         String[] parts = content.split(",");
