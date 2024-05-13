@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.swing.SwingUtilities;
+
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -13,6 +15,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
+import gui.*;
 
 public class GroundControl extends Agent {
     private int targetX, targetY = 0;
@@ -20,10 +23,13 @@ public class GroundControl extends Agent {
     private List<Behaviour> activeBehaviours = new ArrayList<>();
 
     protected void setup() {
-        System.out.println("Hello! Ground Control: " + getAID().getName() + " is ready.");
-        boolean validTarget = false;
-        System.out.println("The rover start in the 1,1 coordinate.");
+            setTargetGUI();
+            /* 
+            System.out.println("Hello! Ground Control: " + getAID().getName() + " is ready.");
+            boolean validTarget = false;
+            System.out.println("The rover start in the 1,1 coordinate.");
         // Loop until valid coordinates are provided
+        //
         while (!validTarget) {
             System.out.println("Please enter target coordinates in the format 'x,y':");
             String input = scanner.nextLine(); // Read user input from console
@@ -60,7 +66,7 @@ public class GroundControl extends Agent {
                 activeBehaviours.add(this);
             }
         });
-
+*/
         Behaviour messageReceiver = new MessageReceiver();
         Behaviour finishedDigging = new finishedDigging();
         Behaviour receiveTheAnalysis = new receiveTheAnalysis();
@@ -78,7 +84,21 @@ public class GroundControl extends Agent {
 
     }
 
-    private void LaunchHeliDrone() {
+    private void setTargetGUI() {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                try {
+   
+                    new GroundControlGUI(GroundControl.this);
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void LaunchHeliDrone() {
         // Create a new ACLMessage to send to the rover
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.addReceiver(new AID("rover", AID.ISLOCALNAME));
@@ -122,8 +142,8 @@ public class GroundControl extends Agent {
     private class receiveWorkDone extends CyclicBehaviour {
 
         public void action() {
-            int x = 0;
-            int y = 0;
+            int newTargetX = 0;
+            int newTargetY = 0;
             boolean validInput = false;
 
             MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -141,7 +161,7 @@ public class GroundControl extends Agent {
                             myAgent.doDelete();
                             return;
                         }
-                        x = Integer.parseInt(inputX.trim());
+                        newTargetX = Integer.parseInt(inputX.trim());
                         validInput = true;
                     } catch (NumberFormatException e) {
                         System.out.println("Invalid input for new X. Please enter an integer.");
@@ -152,7 +172,7 @@ public class GroundControl extends Agent {
                     try {
                         System.out.println("Enter new Y coordinate:");
                         String inputY = scanner.nextLine();
-                        y = Integer.parseInt(inputY.trim());
+                        newTargetY = Integer.parseInt(inputY.trim());
                         validInput = true;
                     } catch (NumberFormatException e) {
                         System.out.println("Invalid input for new Y. Please enter integers.");
@@ -171,9 +191,9 @@ public class GroundControl extends Agent {
                         e.printStackTrace();
                     }
                 }
-                sendNewTarget(x, y);
-                targetX = x;
-                targetY = y;
+                sendNewTarget(newTargetX, newTargetY);
+                targetX = newTargetX;
+                targetY = newTargetY;
             } else {
                 block();
             }
@@ -238,7 +258,7 @@ public class GroundControl extends Agent {
     }
 
     // Method to send new target coordinates to the rover
-    private void sendNewTarget(int newTargetX, int newTargetY) {
+    public void sendNewTarget(int newTargetX, int newTargetY) {
         System.out.println("Sending new target coordinates to Rover: (" + newTargetX + "," + newTargetY + ")");
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.setConversationId("GroundControl-Target-Coordinates");
@@ -246,5 +266,7 @@ public class GroundControl extends Agent {
         msg.setContent(newTargetX + "," + newTargetY);
         send(msg);
     }
+
+
 
 }

@@ -28,20 +28,8 @@ public class RoverAgent extends Agent {
         grid = new Grid(10, 10);
         x = 0;
         y = 0;
-        /*
-         * ContainerController container = getContainerController(); // get the
-         * container controller
-         * try {
-         * String droneName = "drone" + System.currentTimeMillis(); // unique name
-         * AgentController droneAgent = container.createNewAgent(droneName,
-         * "helidrone.HeliDrone", null);
-         * droneAgent.start();
-         * System.out.println("Drone agent launched: " + droneName);
-         * } catch (ControllerException e) {
-         * e.printStackTrace();
-         * System.out.println("Failed to launch the drone agent.");
-         * }
-         */
+
+        //TODO: make the rover can launch the helidrone itself 
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
