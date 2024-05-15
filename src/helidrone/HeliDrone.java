@@ -25,37 +25,11 @@ public class HeliDrone extends Agent {
             public void action() {
                 System.out.println("Hello! HeliDrone: " + getAID().getName() + " is ready.");
                 takeOff();
-
-                // receive the message from the rover agent and process it. store the last known
-                // coordinates of rover agent
-                addBehaviour(new CyclicBehaviour() {
-                    public void action() {
-                        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                                MessageTemplate.MatchConversationId("Rover-Drone-Coordinates"));
-                        ACLMessage msg = receive(mt);
-                        if (msg != null) {
-                            String content = msg.getContent();
-                            // process the message and store the last known coordinates of the rover agent
-                            // code goes here
-                            if (content.contains(",")) {
-                                String[] parts = content.split(",");
-                                lastKnownCoordinates[0] = Integer.parseInt(parts[0].trim());
-                                lastKnownCoordinates[1] = Integer.parseInt(parts[1].trim());
-                            } else {
-                                System.out.println("Invalid coordinates received.");
-                            }
-                        } else {
-                            block();
-                        }
-                    }
-                });
-
+                moveAround();
+                land();
             }
 
         });
-
-        moveAround();
-
     };
 
     // helicopter drone goes around on the grid for 1,5 after that request the new
@@ -63,43 +37,71 @@ public class HeliDrone extends Agent {
     // agent and then goes to the new coordinates
     public void moveAround() {
         Random rand = new Random();
-        
+
         // wait for 1.5 seconds
-        addBehaviour(new WakerBehaviour(this, 1500) {
+        addBehaviour(new WakerBehaviour(this, 1000) {
             protected void onWake() {
                 int newX = lastKnownCoordinates[0] + rand.nextInt(5) - 2;
                 int newY = lastKnownCoordinates[1] + rand.nextInt(5) - 2;
                 // Ensure x and y are within the grid boundaries
                 newX = Math.max(0, Math.min(newX, grid.getWidth() - 1));
                 newY = Math.max(0, Math.min(newY, grid.getHeight() - 1));
-        
-                // code goes here
                 // request the new coordinates from the rover agent
-                // TODO: in the rover implement the resonse to this request
                 System.out.println("HeliDrone is moving to position (" + newX + "," + newY + ")");
-                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-                msg.setContent("Send me your coordinates.");
-                msg.setConversationId("Drone-Rover-Coordinates");
-                msg.addReceiver(new AID("rover", AID.ISLOCALNAME));
-                send(msg);
+                requestNewCoordinates();
+                acceptNewCoordinates();
             }
         });
     }
 
-    // TODO: implement the method to landing the drone in the new rover's
-    // coordinates
-    public void land() {
-        // code goes here
-        System.out.println(
-                "HeliDrone is landing at position (" + lastKnownCoordinates[0] + "," + lastKnownCoordinates[1] + ")");
-        takeDown();
+    // send the request for the new coordinates to the rover agent
+    public void requestNewCoordinates() {
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+        msg.addReceiver(new AID("rover", AID.ISLOCALNAME));
+        msg.setContent("New Coordinates");
+        msg.setConversationId("Drone-Rover-Coordinates");
+        send(msg);
+        System.out.println("Requesting new coordinates from Rover.");
     }
 
-    // TODO: implement the method to control the drone from the ground control
-    public void controlDrone() {
-        // code goes here
+    // accept the new coordinates from the rover agent
+    public void acceptNewCoordinates() {
+        addBehaviour(new CyclicBehaviour() {
+            public void action() {
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                        MessageTemplate.MatchConversationId("Rover-Drone-Coordinates"));
+                ACLMessage msg = receive(mt);
+                if (msg != null) {
+                    String content = msg.getContent();
+
+                    // process the message and store the last known coordinates of the rover agent
+                    if (content.contains(",")) {
+                        String[] parts = content.split(",");
+                        lastKnownCoordinates[0] = Integer.parseInt(parts[0].trim());
+                        lastKnownCoordinates[1] = Integer.parseInt(parts[1].trim());
+                        System.out.println("Received new coordinates from Rover: (" + lastKnownCoordinates[0] + ","
+                                + lastKnownCoordinates[1] + ")");
+
+                    } else {
+                        System.out.println("Invalid coordinates received.");
+                    }
+                } else {
+                    block();
+                }
+            }
+        });
     }
-    // TODO: Send infomration to the rover of what the dro
+
+    public void land() {
+        addBehaviour(new WakerBehaviour(this, 1500) {
+            protected void onWake() {
+                System.out.println("HeliDrone is landing at position (" + lastKnownCoordinates[0] + ","
+                        + lastKnownCoordinates[1] + ")");
+                droneShutDown shutdown = new droneShutDown();
+                addBehaviour(shutdown);
+            }
+        });
+    }
 
     public void takeOff() {
         if (!inFlight) {
@@ -110,9 +112,15 @@ public class HeliDrone extends Agent {
         }
     }
 
+    private class droneShutDown extends OneShotBehaviour {
+        public void action() {
+            doDelete();
+        }
+    }
+
     public void takeDown() {
-        System.out.println("HeliDrone is landing.");
-        inFlight = false;
+        System.out.println("HeliDrone is shutting down.");
+
     }
 
 }

@@ -84,6 +84,24 @@ public class GroundControl extends Agent {
 
     }
 
+    public int getTargetX() {
+        return targetX;
+        
+    }
+
+    public void setTargetX(int targetX) {
+        this.targetX = targetX;
+        
+    }
+    //make get and setter also for targetY
+    public int getTargetY() {
+        return targetY;
+    }
+
+    public void setTargetY(int targetY) {
+        this.targetY = targetY;
+    }
+
     private void setTargetGUI() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -91,7 +109,6 @@ public class GroundControl extends Agent {
    
                     new GroundControlGUI(GroundControl.this);
                 } catch (Exception e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -142,58 +159,13 @@ public class GroundControl extends Agent {
     private class receiveWorkDone extends CyclicBehaviour {
 
         public void action() {
-            int newTargetX = 0;
-            int newTargetY = 0;
-            boolean validInput = false;
-
             MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
                     MessageTemplate.MatchConversationId("Rover-Work-Finished"));
             ACLMessage msg = receive(mt);
             if (msg != null) {
                 String messageContent = msg.getContent();
                 System.out.println("Confirmed message: " + messageContent);
-                while (!validInput) {
-                    try {
-
-                        System.out.println("Enter new X coordinate (or type 'exit' to stop):");
-                        String inputX = scanner.nextLine();
-                        if ("exit".equalsIgnoreCase(inputX.trim())) {
-                            myAgent.doDelete();
-                            return;
-                        }
-                        newTargetX = Integer.parseInt(inputX.trim());
-                        validInput = true;
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid input for new X. Please enter an integer.");
-                    }
-                }
-                validInput = false;
-                while (!validInput) {
-                    try {
-                        System.out.println("Enter new Y coordinate:");
-                        String inputY = scanner.nextLine();
-                        newTargetY = Integer.parseInt(inputY.trim());
-                        validInput = true;
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid input for new Y. Please enter integers.");
-                    }
-                }
-                validInput = false;
-
-                System.out.println("Do you want to launch the helidrone? (yes/no)");
-                String helidroneCommand = scanner.nextLine();
-                if ("yes".equalsIgnoreCase(helidroneCommand)) {
-                    try {
-                        LaunchHeliDrone();
-                        validInput = true;
-                    } catch (Exception e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-                sendNewTarget(newTargetX, newTargetY);
-                targetX = newTargetX;
-                targetY = newTargetY;
+                setTargetGUI();
             } else {
                 block();
             }

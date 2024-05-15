@@ -15,21 +15,17 @@ import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
 
 public class RoverAgent extends Agent {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -6241375886823075380L;
     private int x, y, targetX, targetY;
     private boolean isMovingToTarget = false;
     public Grid grid;
     private String droneName = "";
+    private AgentController droneAgent;
 
     protected void setup() {
         grid = new Grid(10, 10);
         x = 0;
         y = 0;
-
-        //TODO: make the rover can launch the helidrone itself 
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -60,40 +56,23 @@ public class RoverAgent extends Agent {
                 if (msg != null) {
                     String content = msg.getContent();
                     if (content.contains("launch-helidrone")) {
-                        ContainerController container = getContainerController();
-                        try {
-                            droneName = "HeliDrone" + System.currentTimeMillis(); // unique name
-                            AgentController droneAgent = container.createNewAgent(droneName,
-                                    "helidrone.HeliDrone", null);
-                            droneAgent.start();
-                            System.out.println("Drone agent launched: " + droneName);
-                        } catch (ControllerException e) {
-                            e.printStackTrace();
-                            System.out.println("Failed to launch the drone agent.");
-                        }
-                        SendCoordToHeliDrone();
-                        
+                        launchDrone();
                     }
                 } else {
                     block();
                 }
             }
-
-            private void SendCoordToHeliDrone() {
-                //send a message with the coordinates to the helidrone
-                ACLMessage msgDrone = new ACLMessage(ACLMessage.INFORM);
-                msgDrone.addReceiver(new AID(droneName, AID.ISLOCALNAME));
-                msgDrone.setConversationId("Rover-Drone-Coordinates");
-                msgDrone.setContent(x + "," + y);
-                send(msgDrone);
-                System.out.println("Here rover to HeliDrone: I'm at position (" + x + "," + y + ").");
-            }
-
         });
+
 
         addBehaviour(new TickerBehaviour(this, 1000) { // Update every second
             protected void onTick() {
                 if (isMovingToTarget) {
+                    //Rover launches the drone if the target is far away
+                    if ( droneName == ""  && distanceToTarget() > 4){
+                        System.out.println("The target is far away from the rover. Launching the drone to watch from above.");
+                        launchDrone();
+                    }
                     moveToTarget();
                     System.out.println(getAID().getName() + " is at (" + x + "," + y + ")");
                     if (x == targetX && y == targetY) {
@@ -107,71 +86,69 @@ public class RoverAgent extends Agent {
                         send(msg);
                         System.out.println(
                                 "Here rover to Ground control: I reached the target position. I start to dig.");
-                        if(isMovingToTarget == false){
-                            //TODO: send a message to the helidrone to move to the new coordinates
+                        if (isMovingToTarget == false) {
+                            //send a message to the helidrone to move to the new coordinates
+                            addBehaviour(new WakerBehaviour(myAgent, 2000) {
+                                protected void onWake() {
+                                    // send a message that the rover is finished digging
+                                    ACLMessage digFinishedMsg = new ACLMessage(ACLMessage.INFORM);
+                                    digFinishedMsg.addReceiver(new AID("GroundControl", AID.ISLOCALNAME));
+                                    digFinishedMsg.setConversationId("Rover-Dig-Finished");
+                                    digFinishedMsg.setContent("Rover has finished digging at (" + x + "," + y + ")");
+                                    send(digFinishedMsg);
+                                    System.out.println("Here rover to Ground control: I finished digging.");
 
-                        
-                        addBehaviour(new WakerBehaviour(myAgent, 2000) {
-                            protected void onWake() {
-                                // send a message that the rover is finished digging
-                                ACLMessage digFinishedMsg = new ACLMessage(ACLMessage.INFORM);
-                                digFinishedMsg.addReceiver(new AID("GroundControl", AID.ISLOCALNAME));
-                                digFinishedMsg.setConversationId("Rover-Dig-Finished");
-                                digFinishedMsg.setContent("Rover has finished digging at (" + x + "," + y + ")");
-                                send(digFinishedMsg);
-                                System.out.println("Here rover to Ground control: I finished digging.");
+                                    addBehaviour(new WakerBehaviour(myAgent, 3000) {
+                                        protected void onWake() {
+                                            Random random = new Random();
+                                            String[] findings = { "stone", "water", "unknown manufacture" };
+                                            int index = random.nextInt(findings.length);
+                                            String foundItem = findings[index];
+                                            System.out.println("Analysis complete, found: " + foundItem);
 
-                                addBehaviour(new WakerBehaviour(myAgent, 3000) {
-                                    protected void onWake() {
-                                        Random random = new Random();
-                                        String[] findings = { "stone", "water", "unknown manufacture" };
-                                        int index = random.nextInt(findings.length);
-                                        String foundItem = findings[index];
-                                        System.out.println("Analysis complete, found: " + foundItem);
+                                            // Notify ground control of analysis result
+                                            ACLMessage analysisMsg = new ACLMessage(ACLMessage.INFORM);
+                                            analysisMsg.addReceiver(new AID("GroundControl", AID.ISLOCALNAME));
+                                            analysisMsg.setConversationId("Rover-Analysis-Result");
+                                            analysisMsg.setContent(foundItem);
+                                            send(analysisMsg);
 
-                                        // Notify ground control of analysis result
-                                        ACLMessage analysisMsg = new ACLMessage(ACLMessage.INFORM);
-                                        analysisMsg.addReceiver(new AID("GroundControl", AID.ISLOCALNAME));
-                                        analysisMsg.setConversationId("Rover-Analysis-Result");
-                                        analysisMsg.setContent(foundItem);
-                                        send(analysisMsg);
-
-                                        addBehaviour(new WakerBehaviour(myAgent, 5000) {
-                                            protected void onWake() {
-                                                notifyGroundControlDigFinished();
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
+                                            addBehaviour(new WakerBehaviour(myAgent, 5000) {
+                                                protected void onWake() {
+                                                    notifyGroundControlDigFinished();
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
                         // i want simulate the time to dig and after few seconds i will notify the
                         // ground control
                     }
                 }
             }
         });
-        //Add the behaviour to respond to the helidrone if it request the corrdinates
+        droneName = "";
+        // Add the behaviour to respond to the helidrone if it request the coordinates
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
                         MessageTemplate.MatchConversationId("Drone-Rover-Coordinates"));
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
-                    // send the coordinates to the helidrone
-                    ACLMessage msgDrone = new ACLMessage(ACLMessage.INFORM);
-                    msgDrone.addReceiver(new AID("HeliDrone", AID.ISLOCALNAME));
-                    msgDrone.setConversationId("Rover-Drone-Coordinates");
-                    msgDrone.setContent(x + "," + y);
-                    send(msgDrone);
-                    System.out.println("Here rover to HeliDrone: I'm at position (" + x + "," + y + ").");
+                    SendCoordToHeliDrone();
                 } else {
                     block();
                 }
             }
         });
         addBehaviour(new ReceivedShutdown());
+    }
+
+    private int distanceToTarget() {
+        // Manhattan distance
+        return Math.abs(targetX - x) + Math.abs(targetY - y);
     }
 
     private void moveToTarget() {
@@ -185,6 +162,30 @@ public class RoverAgent extends Agent {
         } else if (y > targetY && grid.isValidPosition(x, y - 1)) {
             y--;
         }
+    }
+
+    private void launchDrone() {
+        ContainerController container = getContainerController();
+        try {
+            droneName = "HeliDrone" + System.currentTimeMillis(); // unique name
+            AgentController droneAgent = container.createNewAgent(droneName,
+                    "helidrone.HeliDrone", null);
+            droneAgent.start();
+            System.out.println("Drone agent launched: " + droneName);
+        } catch (ControllerException e) {
+            e.printStackTrace();
+            System.out.println("Failed to launch the drone agent.");
+        }
+    }
+
+    private void SendCoordToHeliDrone() {
+        // send a message with the coordinates to the helidrone
+        ACLMessage msgDrone = new ACLMessage(ACLMessage.INFORM);
+        msgDrone.addReceiver(new AID(droneName, AID.ISLOCALNAME));
+        msgDrone.setConversationId("Rover-Drone-Coordinates");
+        msgDrone.setContent(x + "," + y);
+        send(msgDrone);
+        System.out.println("Here rover to HeliDrone: I'm at position (" + x + "," + y + ").");
     }
 
     private void notifyGroundControlDigFinished() {
