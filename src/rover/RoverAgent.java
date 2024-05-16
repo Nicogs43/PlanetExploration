@@ -1,5 +1,6 @@
 package rover;
 
+import java.awt.Color;
 import java.util.Random;
 import jade.core.AID;
 import jade.core.Agent;
@@ -13,6 +14,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
+import gui.GridGUI;
 
 public class RoverAgent extends Agent {
     private static final long serialVersionUID = -6241375886823075380L;
@@ -20,10 +22,15 @@ public class RoverAgent extends Agent {
     private boolean isMovingToTarget = false;
     public Grid grid;
     private String droneName = "";
+    private boolean isDroneLaunched = false;
+
+
     private AgentController droneAgent;
+    public GridGUI gridGUI;
 
     protected void setup() {
         grid = new Grid(10, 10);
+        gridGUI = new GridGUI(grid, this);
         x = 0;
         y = 0;
         addBehaviour(new CyclicBehaviour(this) {
@@ -32,15 +39,22 @@ public class RoverAgent extends Agent {
                         MessageTemplate.MatchConversationId("GroundControl-Target-Coordinates"));
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
-                    System.out.println("Hello! Rover-agent " + getAID().getName() + " is ready at position (" + x + ","
-                            + y + ").");
+                    gridGUI.printMessageColored(
+                            "Rover-agent " + getAID().getName() + " is ready at position (" + x + "," + y + ").",
+                            Color.RED);
+                    // System.out.println("Hello! Rover-agent " + getAID().getName() + " is ready at
+                    // position (" + x + ","
+                    // + y + ").");
                     String content = msg.getContent();
                     if (content.contains(",")) { // Assuming coordinates are sent in "x,y" format
                         String[] parts = content.split(",");
                         targetX = Integer.parseInt(parts[0].trim());
                         targetY = Integer.parseInt(parts[1].trim());
                         isMovingToTarget = true;
-                        System.out.println("Moving to target position (" + targetX + "," + targetY + ")");
+                        // System.out.println("Moving to target position (" + targetX + "," + targetY +
+                        // ")");
+                        gridGUI.printMessageColored("Moving to target position (" + targetX + "," + targetY + ")",
+                                Color.RED);
                     }
                 } else {
                     block();
@@ -56,7 +70,14 @@ public class RoverAgent extends Agent {
                 if (msg != null) {
                     String content = msg.getContent();
                     if (content.contains("launch-helidrone")) {
-                        launchDrone();
+                        //check if exists already a  drone launched
+                        if (!isDroneLaunched) {
+                            launchDrone();
+                            isDroneLaunched = true;
+                        } else {
+                            // System.out.println("The drone is already launched.");
+                            gridGUI.printMessageColored("The drone is already launched.", Color.RED);
+                        }
                     }
                 } else {
                     block();
@@ -64,19 +85,25 @@ public class RoverAgent extends Agent {
             }
         });
 
-
         addBehaviour(new TickerBehaviour(this, 1000) { // Update every second
             protected void onTick() {
                 if (isMovingToTarget) {
-                    //Rover launches the drone if the target is far away
-                    if ( droneName == ""  && distanceToTarget() > 4){
-                        System.out.println("The target is far away from the rover. Launching the drone to watch from above.");
+                    // Rover launches the drone if the target is far away
+                    if (isDroneLaunched == false && distanceToTarget() >= 8) {
+                        // System.out.println("The target is far away from the rover. Launching the
+                        // drone to watch from above.");
+                        gridGUI.printMessageColored(
+                                "The target is far away from the rover. Launching the drone to watch from above.",
+                                Color.RED);
                         launchDrone();
+                        isDroneLaunched = true;
                     }
                     moveToTarget();
-                    System.out.println(getAID().getName() + " is at (" + x + "," + y + ")");
+                    gridGUI.updateRoverPosition(x, y);
+                    // System.out.println(getAID().getName() + " is at (" + x + "," + y + ")");
                     if (x == targetX && y == targetY) {
                         isMovingToTarget = false;
+                        isDroneLaunched = false;
                         x = targetX;
                         y = targetY;
                         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -84,10 +111,14 @@ public class RoverAgent extends Agent {
                         msg.setConversationId("Rover-Target-Reach");
                         msg.setContent("Rover has reached the target position at (" + x + "," + y + ")");
                         send(msg);
-                        System.out.println(
-                                "Here rover to Ground control: I reached the target position. I start to dig.");
+                        gridGUI.printMessageColored(
+                                "Here rover to Ground control: I reached the target position. I start to dig.",
+                                Color.RED);
+                        // System.out.println(
+                        // "Here rover to Ground control: I reached the target position. I start to
+                        // dig.");
                         if (isMovingToTarget == false) {
-                            //send a message to the helidrone to move to the new coordinates
+                            // send a message to the helidrone to move to the new coordinates
                             addBehaviour(new WakerBehaviour(myAgent, 2000) {
                                 protected void onWake() {
                                     // send a message that the rover is finished digging
@@ -96,15 +127,18 @@ public class RoverAgent extends Agent {
                                     digFinishedMsg.setConversationId("Rover-Dig-Finished");
                                     digFinishedMsg.setContent("Rover has finished digging at (" + x + "," + y + ")");
                                     send(digFinishedMsg);
-                                    System.out.println("Here rover to Ground control: I finished digging.");
-
+                                    // System.out.println("Here rover to Ground control: I finished digging.");
+                                    gridGUI.printMessageColored("Here rover to Ground control: I finished digging.",
+                                            Color.RED);
                                     addBehaviour(new WakerBehaviour(myAgent, 3000) {
                                         protected void onWake() {
                                             Random random = new Random();
                                             String[] findings = { "stone", "water", "unknown manufacture" };
                                             int index = random.nextInt(findings.length);
                                             String foundItem = findings[index];
-                                            System.out.println("Analysis complete, found: " + foundItem);
+                                            // System.out.println("Analysis complete, found: " + foundItem);
+                                            gridGUI.printMessageColored("Analysis complete, found: " + foundItem,
+                                                    Color.RED);
 
                                             // Notify ground control of analysis result
                                             ACLMessage analysisMsg = new ACLMessage(ACLMessage.INFORM);
@@ -129,7 +163,6 @@ public class RoverAgent extends Agent {
                 }
             }
         });
-        droneName = "";
         // Add the behaviour to respond to the helidrone if it request the coordinates
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
@@ -168,13 +201,15 @@ public class RoverAgent extends Agent {
         ContainerController container = getContainerController();
         try {
             droneName = "HeliDrone" + System.currentTimeMillis(); // unique name
-            AgentController droneAgent = container.createNewAgent(droneName,
+            droneAgent = container.createNewAgent(droneName,
                     "helidrone.HeliDrone", null);
             droneAgent.start();
-            System.out.println("Drone agent launched: " + droneName);
+            // System.out.println("Drone agent launched: " + droneName);
+            gridGUI.printMessageColored("Drone agent launched: " + droneName, Color.RED);
         } catch (ControllerException e) {
             e.printStackTrace();
-            System.out.println("Failed to launch the drone agent.");
+            // System.out.println("Failed to launch the drone agent.");
+            gridGUI.printMessageColored("Failed to launch the drone agent.", Color.RED);
         }
     }
 
@@ -185,7 +220,9 @@ public class RoverAgent extends Agent {
         msgDrone.setConversationId("Rover-Drone-Coordinates");
         msgDrone.setContent(x + "," + y);
         send(msgDrone);
-        System.out.println("Here rover to HeliDrone: I'm at position (" + x + "," + y + ").");
+        // System.out.println("Here rover to HeliDrone: I'm at position (" + x + "," + y
+        // + ").");
+        gridGUI.printMessageColored("Here rover to HeliDrone: I'm at position (" + x + "," + y + ").", Color.RED);
     }
 
     private void notifyGroundControlDigFinished() {
@@ -194,13 +231,18 @@ public class RoverAgent extends Agent {
         msg.setConversationId("Rover-work-Finished");
         msg.setContent("Finish to work at (" + x + "," + y + ")");
         send(msg);
-        System.out.println("Here Rover to Ground Control: I'm ready to receive new target coordinates.");
+        // System.out.println("Here Rover to Ground Control: I'm ready to receive new
+        // target coordinates.");
+        gridGUI.printMessageColored("Here Rover to Ground Control: I'm ready to receive new target coordinates.",
+                Color.RED);
 
     }
 
     protected void takeDown() {
         System.out.println("Rover-agent " + getAID().getName() + " is shutting down.");
-
+        GridGUI gridGUI = new GridGUI(grid, this);
+        gridGUI.printMessageColored("Rover-agent " + getAID().getName() + " is shutting down.", Color.RED);
+        gridGUI.dispose();
     }
 
     private class ReceivedShutdown extends CyclicBehaviour {

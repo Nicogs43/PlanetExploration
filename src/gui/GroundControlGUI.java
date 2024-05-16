@@ -13,8 +13,10 @@ public class GroundControlGUI extends JFrame {
     private JTextField targetXField;
     private JTextField targetYField;
     private JButton setTargetButton;
-    //private JButton launchDroneButton;
+    // private JButton launchDroneButton;
     private GroundControl GroundControl;
+    public int targetX, targetY;
+
 
     public GroundControlGUI(GroundControl agent) {
         this.GroundControl = agent;
@@ -33,44 +35,51 @@ public class GroundControlGUI extends JFrame {
 
         mainPanel.add(inputPanel, BorderLayout.CENTER);
 
+
         setTargetButton = new JButton("Set Target Coordinates");
+        setTitle("Ground Control");
         setTargetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                int targetX, targetY;
                 try {
                     targetX = Integer.parseInt(targetXField.getText().trim());
                     targetY = Integer.parseInt(targetYField.getText().trim());
                     // Send new target coordinates to agent
-                    GroundControl.addBehaviour(new OneShotBehaviour(GroundControl) {
-                        public void action() {
-                            System.out.println("Target coordinates set to: (" + targetX + "," + targetY + ")");
-                            // You can add other actions here like sending these coordinates to other agents
-                            GroundControl.sendNewTarget(targetX, targetY);
-                            GroundControl.setTargetX(targetX);
-                            GroundControl.setTargetY(targetY);
-                        }
-                    });
 
                     JOptionPane.showMessageDialog(GroundControlGUI.this,
                             "Target coordinates set to: (" + targetX + "," + targetY + ")",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
 
-                    showLaunchDialog();
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(GroundControlGUI.this,
                             "Invalid input. Please enter integers for coordinates.",
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
+                showLaunchDialog();
+                setCoordTartget(targetX, targetY);
+
+            }
+
+            private void setCoordTartget(int targetX, int targetY) {
+                GroundControl.addBehaviour(new OneShotBehaviour(GroundControl) {
+                    public void action() {
+                        System.out.println("Target coordinates set to: (" + targetX + "," + targetY + ")");
+                        // You can add other actions here like sending these coordinates to other agents
+                        GroundControl.sendNewTarget(targetX, targetY);
+                        GroundControl.setTargetX(targetX);
+                        GroundControl.setTargetY(targetY);
+                    }
+                });
             }
         });
         mainPanel.add(setTargetButton, BorderLayout.SOUTH);
 
         add(mainPanel, BorderLayout.CENTER);
 
-        setSize(300, 150);
+        setSize(500, 150);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
+
     private void showLaunchDialog() {
         int response = JOptionPane.showConfirmDialog(this,
                 "Do you want to launch the HeliDrone?",
@@ -90,3 +99,4 @@ public class GroundControlGUI extends JFrame {
     }
 
 }
+

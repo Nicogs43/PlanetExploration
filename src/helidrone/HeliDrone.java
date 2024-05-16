@@ -1,5 +1,6 @@
 package helidrone;
 
+import java.awt.Color;
 import java.util.Random;
 import jade.core.AID;
 import jade.core.Agent;
@@ -11,19 +12,24 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import environment.Grid;
 import rover.RoverAgent;
+import gui.HeliDroneGUI;
 
 public class HeliDrone extends Agent {
     private boolean inFlight = false;
     public RoverAgent roverAgent;
-    private Grid grid;
+    public Grid grid;
+    public HeliDroneGUI heliDroneGUI;
     private int[] lastKnownCoordinates = new int[2];
 
     protected void setup() {
         grid = new Grid(10, 10);
+        heliDroneGUI = new HeliDroneGUI();
+
         // create a simple behaviour that print out that the drone is created and ready
         addBehaviour(new OneShotBehaviour() {
             public void action() {
-                System.out.println("Hello! HeliDrone: " + getAID().getName() + " is ready.");
+                // System.out.println("Hello! HeliDrone: " + getAID().getName() + " is ready.");
+                heliDroneGUI.printMessage("Hello! HeliDrone: " + getAID().getName() + " is ready.");
                 takeOff();
                 moveAround();
                 land();
@@ -47,7 +53,9 @@ public class HeliDrone extends Agent {
                 newX = Math.max(0, Math.min(newX, grid.getWidth() - 1));
                 newY = Math.max(0, Math.min(newY, grid.getHeight() - 1));
                 // request the new coordinates from the rover agent
-                System.out.println("HeliDrone is moving to position (" + newX + "," + newY + ")");
+                // System.out.println("HeliDrone is moving to position (" + newX + "," + newY +
+                // ")");
+                heliDroneGUI.printMessage("HeliDrone is moving to position (" + newX + "," + newY + ")");
                 requestNewCoordinates();
                 acceptNewCoordinates();
             }
@@ -61,7 +69,8 @@ public class HeliDrone extends Agent {
         msg.setContent("New Coordinates");
         msg.setConversationId("Drone-Rover-Coordinates");
         send(msg);
-        System.out.println("Requesting new coordinates from Rover.");
+        // System.out.println("HeliDrone: Requesting new coordinates from Rover.");
+        heliDroneGUI.printMessage("HeliDrone: Requesting new coordinates from Rover.");
     }
 
     // accept the new coordinates from the rover agent
@@ -79,9 +88,12 @@ public class HeliDrone extends Agent {
                         String[] parts = content.split(",");
                         lastKnownCoordinates[0] = Integer.parseInt(parts[0].trim());
                         lastKnownCoordinates[1] = Integer.parseInt(parts[1].trim());
-                        System.out.println("Received new coordinates from Rover: (" + lastKnownCoordinates[0] + ","
-                                + lastKnownCoordinates[1] + ")");
-
+                        // System.out.println("Received new coordinates from Rover: (" +
+                        // lastKnownCoordinates[0] + ","
+                        // + lastKnownCoordinates[1] + ")");
+                        heliDroneGUI.printMessage(
+                                "Received new coordinates from Rover: (" + lastKnownCoordinates[0] + ","
+                                        + lastKnownCoordinates[1] + ")");
                     } else {
                         System.out.println("Invalid coordinates received.");
                     }
@@ -95,7 +107,10 @@ public class HeliDrone extends Agent {
     public void land() {
         addBehaviour(new WakerBehaviour(this, 1500) {
             protected void onWake() {
-                System.out.println("HeliDrone is landing at position (" + lastKnownCoordinates[0] + ","
+                // System.out.println("HeliDrone is landing at position (" +
+                // lastKnownCoordinates[0] + ","
+                // + lastKnownCoordinates[1] + ")");
+                heliDroneGUI.printMessage("HeliDrone is landing at position (" + lastKnownCoordinates[0] + ","
                         + lastKnownCoordinates[1] + ")");
                 droneShutDown shutdown = new droneShutDown();
                 addBehaviour(shutdown);
@@ -105,10 +120,13 @@ public class HeliDrone extends Agent {
 
     public void takeOff() {
         if (!inFlight) {
-            System.out.println("HeliDrone is taking off.");
+            // System.out.println("HeliDrone is taking off.");
+            heliDroneGUI.printMessage("HeliDrone is taking off.");
             inFlight = true;
         } else {
-            System.out.println("HeliDrone is already in flight.");
+            // System.out.println("HeliDrone is already in flight.");
+            heliDroneGUI.printMessage("HeliDrone is already in flight.");
+
         }
     }
 
@@ -120,6 +138,7 @@ public class HeliDrone extends Agent {
 
     public void takeDown() {
         System.out.println("HeliDrone is shutting down.");
+        //heliDroneGUI.dispose();
 
     }
 
