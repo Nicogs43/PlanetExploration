@@ -2,8 +2,6 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class TextAreaGC extends JFrame {
     private JTextArea textArea;
@@ -42,16 +40,6 @@ public class TextAreaGC extends JFrame {
             //textArea.setForeground(color); // Set the text color
             textArea.append(message + "\n");
         });
-    }
-
-    public static void main(String[] args) {
-        // Create an instance of TextAreaGC
-        TextAreaGC textAreaGC = new TextAreaGC();
-        
-        // Simulate appending messages
-        textAreaGC.printMessage("System initialized.");
-        textAreaGC.printMessage("Rover moved to (5, 5).");
-        textAreaGC.printMessage("Communication established.");
     }
 }
 

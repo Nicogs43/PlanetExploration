@@ -2,20 +2,14 @@ package groundcontrol;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-
 import javax.swing.SwingUtilities;
 
-import environment.Grid;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.wrapper.ControllerException;
-import jade.wrapper.StaleProxyException;
 import gui.*;
 
 public class GroundControl extends Agent {
@@ -27,51 +21,7 @@ public class GroundControl extends Agent {
     protected void setup() {
         setTargetGUI();
         textArea = new TextAreaGC();
-        /*
-         * System.out.println("Hello! Ground Control: " + getAID().getName() +
-         * " is ready.");
-         * boolean validTarget = false;
-         * System.out.println("The rover start in the 1,1 coordinate.");
-         * // Loop until valid coordinates are provided
-         * //
-         * while (!validTarget) {
-         * System.out.println("Please enter target coordinates in the format 'x,y':");
-         * String input = scanner.nextLine(); // Read user input from console
-         * 
-         * if (input != null && !input.isEmpty()) {
-         * String[] parts = input.split(",");
-         * if (parts.length == 2) { // Ensure there are exactly two parts
-         * try {
-         * targetX = Integer.parseInt(parts[0].trim());
-         * targetY = Integer.parseInt(parts[1].trim());
-         * validTarget = true; // Set the flag to true to break the loop
-         * } catch (NumberFormatException e) {
-         * System.out.println("Failed to parse coordinates. Ensure they are integers.");
-         * }
-         * } else {
-         * System.out.println("Invalid coordinates format. Expected format: 'x,y'");
-         * }
-         * } else {
-         * System.out.println("No input detected. Please enter target coordinates.");
-         * }
-         * }
-         * System.out.println("Target coordinates set to: (" + targetX + "," + targetY +
-         * ")");
-         * System.out.println("Do you want to launch the helidrone? (yes/no)");
-         * String helidroneCommand = scanner.nextLine();
-         * 
-         * if ("yes".equalsIgnoreCase(helidroneCommand)) {
-         * LaunchHeliDrone();
-         * }
-         * 
-         * addBehaviour(new OneShotBehaviour(this) {
-         * public void action() {
-         * sendNewTarget(targetX, targetY);
-         * // add the behaviour to the list of active behaviours
-         * activeBehaviours.add(this);
-         * }
-         * });
-         */
+
         Behaviour messageReceiver = new MessageReceiver();
         Behaviour finishedDigging = new finishedDigging();
         Behaviour receiveTheAnalysis = new receiveTheAnalysis();
