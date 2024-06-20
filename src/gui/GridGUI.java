@@ -8,7 +8,6 @@ import javax.swing.text.StyledDocument;
 
 import java.awt.*;
 import environment.Grid;
-import rover.RoverAgent;
 
 public class GridGUI extends JFrame {
     private Grid grid;
@@ -16,11 +15,14 @@ public class GridGUI extends JFrame {
     private JPanel[][] cellPanels; // 2D array to store references to cell panels
     private JTextPane textPane;
     private StyledDocument doc;
-    private RoverAgent roverAgent;
+    private Icon roverIcon;
+    private Icon droneIcon;
+    private int cellSize = 50;
 
-    public GridGUI(Grid grid, RoverAgent roverAgent) {
+    public GridGUI(Grid grid) {
         this.grid = grid;
-        this.roverAgent = roverAgent;
+        roverIcon = new ImageIcon(new ImageIcon("images\\explorer.png").getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH));
+        droneIcon = new ImageIcon(new ImageIcon("images\\drone.png").getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH));
         initializeUI();
     }
 
@@ -36,6 +38,7 @@ public class GridGUI extends JFrame {
             for (int j = 0; j < grid.getWidth(); j++) {
                 JPanel panel = new JPanel();
                 panel.setBorder(BorderFactory.createLineBorder(Color.black));
+                panel.setPreferredSize(new Dimension(cellSize, cellSize));
                 gridPanel.add(panel);
                 cellPanels[i][j] = panel;
             }
@@ -65,21 +68,39 @@ public class GridGUI extends JFrame {
     }
 
     public void updateRoverPosition(int x, int y) {
+        resetAllCellPanels();
+        // Highlight the rover's current position
+        printMessageColored("Rover is at (" + x + "," + y + ")", Color.RED);
+        JLabel roverLabel = new JLabel(roverIcon);
+        roverLabel.setVisible(rootPaneCheckingEnabled);
+        roverLabel.setPreferredSize(new Dimension(50,50));
+        cellPanels[y][x].add(roverLabel, BorderLayout.CENTER);
+        cellPanels[y][x].revalidate();
+        cellPanels[y][x].repaint();
+        //cellPanels[y][x].setBackground(Color.RED);
+
+
+    }
+    public void updateDronePosition(int x , int y){
+        resetAllCellPanels();
+        JLabel droneLabel = new JLabel(droneIcon);
+        droneLabel.setVisible(rootPaneCheckingEnabled);
+        droneLabel.setPreferredSize(new Dimension(50,50));
+        cellPanels[y][x].add(droneLabel, BorderLayout.CENTER);
+        cellPanels[y][x].revalidate();
+        cellPanels[y][x].repaint();
+    }
+
+    private void resetAllCellPanels() {
         // Reset all cells to default background
         for (int row = 0; row < grid.getHeight(); row++) {
             for (int col = 0; col < grid.getWidth(); col++) {
-                cellPanels[row][col].setBackground(null);
+                cellPanels[row][col].removeAll();
+                cellPanels[row][col].revalidate();
+                cellPanels[row][col].repaint();
+                //cellPanels[row][col].setBackground(null);
             }
         }
-        // Highlight the rover's current position
-        printMessageColored("Rover is at (" + x + "," + y + ")", Color.RED);
-        cellPanels[y][x].setBackground(Color.RED);
-
-    }
-
-    // Method to perform cleanup operations
-    private void cleanupAgents() {
-        roverAgent.doDelete();
     }
 
 }

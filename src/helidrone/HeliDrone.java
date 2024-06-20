@@ -9,19 +9,22 @@ import jade.core.behaviours.WakerBehaviour;
 import environment.Grid;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import rover.RoverAgent;
 import gui.HeliDroneGUI;
+import gui.GridGUI;
+
 
 public class HeliDrone extends Agent {
     private boolean inFlight = false;
-    public RoverAgent roverAgent;
     public Grid grid;
+    public GridGUI gridGUI;
     public HeliDroneGUI heliDroneGUI;
     private int[] lastKnownCoordinates = new int[2];
 
     protected void setup() {
         grid = new Grid(10, 10);
+        gridGUI = new GridGUI(grid);
         heliDroneGUI = new HeliDroneGUI();
+
 
         // create a simple behaviour that print out that the drone is created and ready
         addBehaviour(new OneShotBehaviour() {
@@ -49,6 +52,7 @@ public class HeliDrone extends Agent {
                 newX = Math.max(0, Math.min(newX, grid.getWidth() - 1));
                 newY = Math.max(0, Math.min(newY, grid.getHeight() - 1));
                 heliDroneGUI.printMessage("HeliDrone is moving to position (" + newX + "," + newY + ")");
+                gridGUI.updateDronePosition(newX, newY);
                 requestNewCoordinates();
                 acceptNewCoordinates();
             }

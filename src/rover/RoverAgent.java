@@ -29,7 +29,7 @@ public class RoverAgent extends Agent {
 
     protected void setup() {
         grid = new Grid(10, 10);
-        gridGUI = new GridGUI(grid, this);
+        gridGUI = new GridGUI(grid);
         x = 0;
         y = 0;
         addBehaviour(new CyclicBehaviour(this) {
@@ -216,7 +216,7 @@ public class RoverAgent extends Agent {
 
     protected void takeDown() {
         System.out.println("Rover-agent " + getAID().getName() + " is shutting down.");
-        GridGUI gridGUI = new GridGUI(grid, this);
+        GridGUI gridGUI = new GridGUI(grid);
         gridGUI.printMessageColored("Rover-agent " + getAID().getName() + " is shutting down.", Color.RED);
         gridGUI.dispose();
     }

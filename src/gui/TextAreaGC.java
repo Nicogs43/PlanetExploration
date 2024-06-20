@@ -17,7 +17,7 @@ public class TextAreaGC extends JFrame {
         // Initialize the text area
         textArea = new JTextArea();
         textArea.setEditable(false); // Make it read-only
-        textArea.setLineWrap(true);  // Enable line wrapping
+        textArea.setLineWrap(true); // Enable line wrapping
         textArea.setWrapStyleWord(true); // Wrap at word boundaries
 
         // Add the text area to a scroll pane
@@ -31,15 +31,22 @@ public class TextAreaGC extends JFrame {
         setSize(600, 400);
         // Make the frame visible
         setVisible(true);
-        setLocationRelativeTo(null);
+        // Get the screen size
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        // Calculate the new location
+        int x = screenSize.width - getWidth();
+        int y = screenSize.height - getHeight();
+
+        // Set the new location
+        setLocation(x, y);
     }
 
     // Method to append messages to the text area
     public void printMessage(String message) {
         SwingUtilities.invokeLater(() -> {
-            //textArea.setForeground(color); // Set the text color
+            // textArea.setForeground(color); // Set the text color
             textArea.append(message + "\n");
         });
     }
 }
-
