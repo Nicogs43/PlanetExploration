@@ -23,7 +23,6 @@ public class RoverAgent extends Agent {
     private String droneName = "";
     private boolean isDroneLaunched = false;
 
-
     private AgentController droneAgent;
     public GridGUI gridGUI;
 
@@ -42,7 +41,7 @@ public class RoverAgent extends Agent {
                             "Rover-agent " + getAID().getName() + " is ready at position (" + x + "," + y + ").",
                             Color.RED);
                     String content = msg.getContent();
-                    if (content.contains(",")) { // Assuming coordinates are sent in "x,y" format
+                    if (content.contains(",")) { 
                         String[] parts = content.split(",");
                         targetX = Integer.parseInt(parts[0].trim());
                         targetY = Integer.parseInt(parts[1].trim());
@@ -55,7 +54,7 @@ public class RoverAgent extends Agent {
                 }
             }
         });
-        // add a cyclic behaviour to receive th message if launch the helidrone
+        // add a cyclic behaviour to receive the message if launch the helidrone
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -75,6 +74,48 @@ public class RoverAgent extends Agent {
                     block();
                 }
             }
+        });
+        // TODO: add the behaviour to update the drone in GRIDGUI
+        addBehaviour(new CyclicBehaviour() {
+            public void action() {
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                        MessageTemplate.MatchConversationId("Drone-Grid-Update"));
+                ACLMessage msg = receive(mt);
+                if (msg != null) {
+                    String content = msg.getContent();
+                    //System.out.println("Received new coordinates from Rover: " + content);
+                    if (content.contains(",")) {
+                        String[] parts = content.split(",");
+                        int droneX = Integer.parseInt(parts[0].trim());
+                        int droneY = Integer.parseInt(parts[1].trim());
+                        // gridGUI.printMessageColored("Drone is at position (" + droneX + "," + droneY
+                        // + ")", Color.RED);
+                        //System.out.println("Drone is at position (" + droneX + "," + droneY + ")");
+                        gridGUI.updateDronePosition(droneX, droneY);
+                    } else {
+                        System.out.println("Invalid coordinates received.");
+                    }
+                } else {
+                    block();
+                }
+            }
+
+        });
+        addBehaviour(new CyclicBehaviour() {
+            public void action() {
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                        MessageTemplate.MatchConversationId("Drone-Landed"));
+                ACLMessage msg = receive(mt);
+                if (msg != null) {
+                    if (msg.getContent().equals("Drone has landed")){
+                        gridGUI.printMessageColored("Drone has landed.", Color.RED);
+                        gridGUI.clearDronePosition();
+                    }
+                } else {
+                    block();
+                }
+            }
+        
         });
 
         addBehaviour(new TickerBehaviour(this, 1000) { // Update every second

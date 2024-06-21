@@ -18,6 +18,9 @@ public class GridGUI extends JFrame {
     private Icon roverIcon;
     private Icon droneIcon;
     private int cellSize = 50;
+    private int[] roverPosition = {-1, -1}; // Initially, no position
+    private int[] dronePosition = {-1, -1}; // Initially, no position
+
 
     public GridGUI(Grid grid) {
         this.grid = grid;
@@ -68,7 +71,10 @@ public class GridGUI extends JFrame {
     }
 
     public void updateRoverPosition(int x, int y) {
-        resetAllCellPanels();
+        //resetAllCellPanels();
+        clearPosition(roverPosition[0], roverPosition[1]);
+        roverPosition[0] = x;
+        roverPosition[1] = y;
         // Highlight the rover's current position
         printMessageColored("Rover is at (" + x + "," + y + ")", Color.RED);
         JLabel roverLabel = new JLabel(roverIcon);
@@ -82,7 +88,10 @@ public class GridGUI extends JFrame {
 
     }
     public void updateDronePosition(int x , int y){
-        resetAllCellPanels();
+        //resetAllCellPanels();
+        clearPosition(dronePosition[0], dronePosition[1]);
+        dronePosition[0] = x;
+        dronePosition[1] = y;
         JLabel droneLabel = new JLabel(droneIcon);
         droneLabel.setVisible(rootPaneCheckingEnabled);
         droneLabel.setPreferredSize(new Dimension(50,50));
@@ -91,7 +100,7 @@ public class GridGUI extends JFrame {
         cellPanels[y][x].repaint();
     }
 
-    private void resetAllCellPanels() {
+/*    private void resetAllCellPanels() {
         // Reset all cells to default background
         for (int row = 0; row < grid.getHeight(); row++) {
             for (int col = 0; col < grid.getWidth(); col++) {
@@ -101,6 +110,19 @@ public class GridGUI extends JFrame {
                 //cellPanels[row][col].setBackground(null);
             }
         }
+    }*/ 
+    private void clearPosition(int x, int y) {
+        if (x >= 0 && y >= 0) {
+            cellPanels[y][x].removeAll();
+            cellPanels[y][x].revalidate();
+            cellPanels[y][x].repaint();
+        }
+    }
+    public void clearDronePosition() {
+        clearPosition(dronePosition[0], dronePosition[1]);
+        dronePosition[0] = -1;
+        dronePosition[1] = -1;
+        printMessageColored("Drone has landed and is removed from the grid.", Color.BLUE);
     }
 
 }

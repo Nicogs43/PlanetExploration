@@ -5,7 +5,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import groundcontrol.GroundControl;
 
