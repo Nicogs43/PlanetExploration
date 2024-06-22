@@ -17,15 +17,18 @@ public class GridGUI extends JFrame {
     private StyledDocument doc;
     private Icon roverIcon;
     private Icon droneIcon;
+    private Icon alienIcon;
     private int cellSize = 50;
     private int[] roverPosition = {-1, -1}; // Initially, no position
     private int[] dronePosition = {-1, -1}; // Initially, no position
+    private int[] alienPosition = {-1, -1}; // Initially, no position
 
 
     public GridGUI(Grid grid) {
         this.grid = grid;
         roverIcon = new ImageIcon(new ImageIcon("images\\explorer.png").getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH));
         droneIcon = new ImageIcon(new ImageIcon("images\\drone.png").getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH));
+        alienIcon = new ImageIcon(new ImageIcon("images\\alien.png").getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH));
         initializeUI();
     }
 
@@ -39,11 +42,12 @@ public class GridGUI extends JFrame {
 
         for (int i = 0; i < grid.getHeight(); i++) {
             for (int j = 0; j < grid.getWidth(); j++) {
-                JPanel panel = new JPanel();
-                panel.setBorder(BorderFactory.createLineBorder(Color.black));
-                panel.setPreferredSize(new Dimension(cellSize, cellSize));
-                gridPanel.add(panel);
-                cellPanels[i][j] = panel;
+                JLayeredPane layeredPane = new JLayeredPane();
+                layeredPane.setBorder(BorderFactory.createLineBorder(Color.black));
+                layeredPane.setPreferredSize(new Dimension(cellSize, cellSize));
+                cellPanels[i][j] = new JPanel(new BorderLayout());
+                cellPanels[i][j].add(layeredPane);
+                gridPanel.add(cellPanels[i][j]);
             }
         }
         textPane = new JTextPane();
@@ -71,6 +75,58 @@ public class GridGUI extends JFrame {
     }
 
     public void updateRoverPosition(int x, int y) {
+        clearPosition(roverPosition[0], roverPosition[1], roverIcon);
+        roverPosition[0] = x;
+        roverPosition[1] = y;
+        // Highlight the rover's current position
+        printMessageColored("Rover is at (" + x + "," + y + ")", Color.RED);
+        addIconToCell(x, y, roverIcon);
+    }
+
+    public void updateDronePosition(int x , int y){
+        clearPosition(dronePosition[0], dronePosition[1], droneIcon);
+        dronePosition[0] = x;
+        dronePosition[1] = y;
+        addIconToCell(x, y, droneIcon);
+    }
+
+    public void updateAlienPosition(int x, int y) {
+        clearPosition(alienPosition[0], alienPosition[1], alienIcon);
+        alienPosition[0] = x;
+        alienPosition[1] = y;
+        addIconToCell(x, y, alienIcon);
+    }
+
+    private void clearPosition(int x, int y, Icon icon) {
+        if (x >= 0 && y >= 0) {
+            JLayeredPane layeredPane = (JLayeredPane) cellPanels[y][x].getComponent(0);
+            for (Component component : layeredPane.getComponents()) {
+                if (component instanceof JLabel && ((JLabel) component).getIcon() == icon) {
+                    layeredPane.remove(component);
+                }
+            }
+            layeredPane.revalidate();
+            layeredPane.repaint();
+        }
+    }
+
+    private void addIconToCell(int x, int y, Icon icon) {
+        JLayeredPane layeredPane = (JLayeredPane) cellPanels[y][x].getComponent(0);
+        JLabel label = new JLabel(icon);
+        label.setBounds(0, 0, cellSize, cellSize);
+        layeredPane.add(label, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.revalidate();
+        layeredPane.repaint();
+    }
+
+    public void clearDronePosition() {
+        clearPosition(dronePosition[0], dronePosition[1], droneIcon);
+        dronePosition[0] = -1;
+        dronePosition[1] = -1;
+        printMessageColored("Drone has landed and is removed from the grid.", Color.BLUE);
+    }
+
+    /*public void updateRoverPosition(int x, int y) {
         //resetAllCellPanels();
         clearPosition(roverPosition[0], roverPosition[1]);
         roverPosition[0] = x;
@@ -99,6 +155,18 @@ public class GridGUI extends JFrame {
         cellPanels[y][x].revalidate();
         cellPanels[y][x].repaint();
     }
+    public void updateAlienPosition(int x, int y) {
+        //resetAllCellPanels();
+        clearPosition(alienPosition[0], alienPosition[1]);
+        alienPosition[0] = x;
+        alienPosition[1] = y;
+        JLabel alienLabel = new JLabel(alienIcon);
+        alienLabel.setVisible(rootPaneCheckingEnabled);
+        alienLabel.setPreferredSize(new Dimension(50,50));
+        cellPanels[y][x].add(alienLabel, BorderLayout.CENTER);
+        cellPanels[y][x].revalidate();
+        cellPanels[y][x].repaint();
+    }
 
 /*    private void resetAllCellPanels() {
         // Reset all cells to default background
@@ -110,7 +178,7 @@ public class GridGUI extends JFrame {
                 //cellPanels[row][col].setBackground(null);
             }
         }
-    }*/ 
+    }
     private void clearPosition(int x, int y) {
         if (x >= 0 && y >= 0) {
             cellPanels[y][x].removeAll();
@@ -123,6 +191,6 @@ public class GridGUI extends JFrame {
         dronePosition[0] = -1;
         dronePosition[1] = -1;
         printMessageColored("Drone has landed and is removed from the grid.", Color.BLUE);
-    }
+    }*/
 
 }

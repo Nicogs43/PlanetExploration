@@ -27,97 +27,67 @@ public class RoverAgent extends Agent {
     public GridGUI gridGUI;
 
     protected void setup() {
-        grid = new Grid(10, 10);
-        gridGUI = new GridGUI(grid);
+        // grid = new Grid(10, 10);
+        // gridGUI = new GridGUI(grid);
+        // take the grid from the main container
+        System.out.println("Rover-agent " + getAID().getName() + " is ready.");
+        Object[] args = getArguments();
+        if (args == null || args.length < 2) {
+            System.out.println("Invalid arguments. Please provide the grid and gridGUI objects.");
+        }
+        grid = (Grid) args[0];
+        gridGUI = (GridGUI) args[1];
         x = 0;
         y = 0;
+        handleTargetCoordinatesMessage();
+        handleLaunchHelidrone();
+        updateDroneInGridGUI();
+        receiveDroneLandingMessage();
+        mainRoverLogic();
+        handleHelidroneRequest();
+        handleAlienProposal();
+        addBehaviour(new ReceivedShutdown());
+    }
+
+    private void handleAlienProposal() {
+        // add behaviour to receive the proposal from the alien
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
-                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                        MessageTemplate.MatchConversationId("GroundControl-Target-Coordinates"));
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),
+                        MessageTemplate.MatchConversationId("Alien-Rover-Proposal"));
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
-                    gridGUI.printMessageColored(
-                            "Rover-agent " + getAID().getName() + " is ready at position (" + x + "," + y + ").",
-                            Color.RED);
-                    String content = msg.getContent();
-                    if (content.contains(",")) { 
-                        String[] parts = content.split(",");
-                        targetX = Integer.parseInt(parts[0].trim());
-                        targetY = Integer.parseInt(parts[1].trim());
-                        isMovingToTarget = true;
-                        gridGUI.printMessageColored("Moving to target position (" + targetX + "," + targetY + ")",
-                                Color.RED);
-                    }
+                    gridGUI.printMessageColored("Someone or something try to communicate with me. So scary! " + msg.getContent(), Color.RED);
+                    ACLMessage reply = msg.createReply();
+                    reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+                    reply.setConversationId("Rover-Alien-Rej-Proposal");
+                    reply.setContent("Who are you? I'm busy.");
+                    send(reply);
+                    gridGUI.printMessageColored("Proposal rejected", Color.RED);
                 } else {
                     block();
                 }
             }
         });
-        // add a cyclic behaviour to receive the message if launch the helidrone
+    }
+
+    private void handleHelidroneRequest() {
+        // Add the behaviour to respond to the helidrone if it request the coordinates
         addBehaviour(new CyclicBehaviour(this) {
-            public void action() {
-                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                        MessageTemplate.MatchConversationId("GroundControl-Launch-Helidrone"));
-                ACLMessage msg = receive(mt);
-                if (msg != null) {
-                    String content = msg.getContent();
-                    if (content.contains("launch-helidrone")) {
-                        if (!isDroneLaunched) {
-                            launchDrone();
-                            isDroneLaunched = true;
-                        } else {
-                            gridGUI.printMessageColored("The drone is already launched.", Color.RED);
-                        }
-                    }
-                } else {
-                    block();
-                }
-            }
-        });
-        // TODO: add the behaviour to update the drone in GRIDGUI
-        addBehaviour(new CyclicBehaviour() {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                        MessageTemplate.MatchConversationId("Drone-Grid-Update"));
+                        MessageTemplate.MatchConversationId("Drone-Rover-Coordinates"));
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
-                    String content = msg.getContent();
-                    //System.out.println("Received new coordinates from Rover: " + content);
-                    if (content.contains(",")) {
-                        String[] parts = content.split(",");
-                        int droneX = Integer.parseInt(parts[0].trim());
-                        int droneY = Integer.parseInt(parts[1].trim());
-                        // gridGUI.printMessageColored("Drone is at position (" + droneX + "," + droneY
-                        // + ")", Color.RED);
-                        //System.out.println("Drone is at position (" + droneX + "," + droneY + ")");
-                        gridGUI.updateDronePosition(droneX, droneY);
-                    } else {
-                        System.out.println("Invalid coordinates received.");
-                    }
+                    SendCoordToHeliDrone();
                 } else {
                     block();
                 }
             }
-
         });
-        addBehaviour(new CyclicBehaviour() {
-            public void action() {
-                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-                        MessageTemplate.MatchConversationId("Drone-Landed"));
-                ACLMessage msg = receive(mt);
-                if (msg != null) {
-                    if (msg.getContent().equals("Drone has landed")){
-                        gridGUI.printMessageColored("Drone has landed.", Color.RED);
-                        gridGUI.clearDronePosition();
-                    }
-                } else {
-                    block();
-                }
-            }
-        
-        });
+    }
 
+    private void mainRoverLogic() {
         addBehaviour(new TickerBehaviour(this, 1000) { // Update every second
             protected void onTick() {
                 if (isMovingToTarget) {
@@ -186,20 +156,105 @@ public class RoverAgent extends Agent {
                 }
             }
         });
-        // Add the behaviour to respond to the helidrone if it request the coordinates
-        addBehaviour(new CyclicBehaviour(this) {
+    }
+
+    private void receiveDroneLandingMessage() {
+        //beahviour to receive the message from the ground control that the drone has landed
+        addBehaviour(new CyclicBehaviour() {
             public void action() {
-                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-                        MessageTemplate.MatchConversationId("Drone-Rover-Coordinates"));
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                        MessageTemplate.MatchConversationId("Drone-Landed"));
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
-                    SendCoordToHeliDrone();
+                    if (msg.getContent().equals("Drone has landed")) {
+                        gridGUI.printMessageColored("Drone has landed.", Color.RED);
+                        gridGUI.clearDronePosition();
+                    }
+                } else {
+                    block();
+                }
+            }
+
+        });
+    }
+
+    private void updateDroneInGridGUI() {
+        // TODO: add the behaviour to update the drone in GRIDGUI
+        addBehaviour(new CyclicBehaviour() {
+            public void action() {
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                        MessageTemplate.MatchConversationId("Drone-Grid-Update"));
+                ACLMessage msg = receive(mt);
+                if (msg != null) {
+                    String content = msg.getContent();
+                    // System.out.println("Received new coordinates from Rover: " + content);
+                    if (content.contains(",")) {
+                        String[] parts = content.split(",");
+                        int droneX = Integer.parseInt(parts[0].trim());
+                        int droneY = Integer.parseInt(parts[1].trim());
+                        // gridGUI.printMessageColored("Drone is at position (" + droneX + "," + droneY
+                        // + ")", Color.RED);
+                        // System.out.println("Drone is at position (" + droneX + "," + droneY + ")");
+                        gridGUI.updateDronePosition(droneX, droneY);
+                    } else {
+                        System.out.println("Invalid coordinates received.");
+                    }
+                } else {
+                    block();
+                }
+            }
+
+        });
+    }
+
+    private void handleLaunchHelidrone() {
+        // add a cyclic behaviour to receive the message if launch the helidrone
+        addBehaviour(new CyclicBehaviour(this) {
+            public void action() {
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                        MessageTemplate.MatchConversationId("GroundControl-Launch-Helidrone"));
+                ACLMessage msg = receive(mt);
+                if (msg != null) {
+                    String content = msg.getContent();
+                    if (content.contains("launch-helidrone")) {
+                        if (!isDroneLaunched) {
+                            launchDrone();
+                            isDroneLaunched = true;
+                        } else {
+                            gridGUI.printMessageColored("The drone is already launched.", Color.RED);
+                        }
+                    }
                 } else {
                     block();
                 }
             }
         });
-        addBehaviour(new ReceivedShutdown());
+    }
+
+    private void handleTargetCoordinatesMessage() {
+        addBehaviour(new CyclicBehaviour(this) {
+            public void action() {
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                        MessageTemplate.MatchConversationId("GroundControl-Target-Coordinates"));
+                ACLMessage msg = receive(mt);
+                if (msg != null) {
+                    gridGUI.printMessageColored(
+                            "Rover-agent " + getAID().getName() + " is ready at position (" + x + "," + y + ").",
+                            Color.RED);
+                    String content = msg.getContent();
+                    if (content.contains(",")) {
+                        String[] parts = content.split(",");
+                        targetX = Integer.parseInt(parts[0].trim());
+                        targetY = Integer.parseInt(parts[1].trim());
+                        isMovingToTarget = true;
+                        gridGUI.printMessageColored("Moving to target position (" + targetX + "," + targetY + ")",
+                                Color.RED);
+                    }
+                } else {
+                    block();
+                }
+            }
+        });
     }
 
     private int distanceToTarget() {
@@ -225,7 +280,7 @@ public class RoverAgent extends Agent {
         try {
             droneName = "HeliDrone" + System.currentTimeMillis(); // unique name
             droneAgent = container.createNewAgent(droneName,
-                    "helidrone.HeliDrone", null);
+                    "helidrone.HeliDrone", new Object[]{this.grid});
             droneAgent.start();
             gridGUI.printMessageColored("Drone agent launched: " + droneName, Color.RED);
         } catch (ControllerException e) {

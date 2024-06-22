@@ -23,9 +23,11 @@ public class HeliDrone extends Agent {
     private int[] lastKnownCoordinates = new int[2];
 
     protected void setup() {
-        grid = new Grid(10, 10);
+        //grid = new Grid(10, 10);
+        //get the arguments from the rover agent
+        Object[] args = getArguments();
+        grid = (Grid) args[0];
         heliDroneGUI = new HeliDroneGUI();
-
         // create a simple behaviour that print out that the drone is created and ready
         addBehaviour(new OneShotBehaviour() {
             public void action() {
