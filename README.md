@@ -1,8 +1,4 @@
-## Getting Started
-
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
-
-## Project Structure
+## Project Structure 📂
 
 - **src/**: Contains the source code for the agents and their behaviors.
   - **DroneAgent.java**: Defines the Drone agent's behaviors and communication protocols.
@@ -31,7 +27,7 @@ The Ground Control agent acts as the central coordinator for the mission. Entry 
 ### Alien Agent
 The Alien agent represents indigenous entities on the planet. It interacts with the Rover and Drone agents, introducing dynamic elements and challenges to the exploration mission.
 
-## Getting Started
+## Getting Started 🚀
 
 ### Prerequisites
 - Java Development Kit (JDK) 8 or higher
