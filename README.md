@@ -1,3 +1,7 @@
+# Planet Exploration Multi-Agent System
+
+Welcome to the Planet Exploration Multi-Agent System repository. This project, for Unige's Multi-agent system course, exploits JADE (Java Agent DEvelopment Framework) to simulate the exploration of a hypothetical Mars-like planet. The system consists of four types of agents: Drone, Rover, Ground Control and Alien.
+
 ## Project Structure 📂
 
 - **src/**: Contains the source code for the agents and their behaviors.
