@@ -6,6 +6,7 @@ import environment.Grid;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -18,7 +19,7 @@ public class Alien extends Agent {
     private Random random = new Random();
     private int x, y;
     private int targetX, targetY;
-    boolean responseToTheProposal = false;
+    //boolean responseToTheProposal = false;
 
     protected void setup() {
         Object[] args = getArguments();
@@ -26,7 +27,6 @@ public class Alien extends Agent {
         gridGui = (GridGUI) args[1];
         setNewRandomtargets();
         moveToTargetBehaviour();
-        sendProposalBehaviour();
         HandleProposalRejectionBehaviour();
     }
 
@@ -40,28 +40,38 @@ public class Alien extends Agent {
         return x == targetX && y == targetY;
     }
 
+
     private void moveToTargetBehaviour() {
         // ticker behaviour
-        addBehaviour(new TickerBehaviour(this, 1000) {
-            protected void onTick() {
-                moveToTarget();
-                gridGui.updateAlienPosition(x, y);
+        //the alien wait 10 second before moving to the target
+        addBehaviour(new WakerBehaviour(this, 10000) {
+            protected void onWake() {
+                // Now add the TickerBehaviour after the delay
+                addBehaviour(new TickerBehaviour(myAgent, 1000) {
+                    protected void onTick() {
+                        if (isAtTarget()) {
+                            sendProposalBehaviour();
+                            setNewRandomtargets();
+                            moveToTarget();
+                        }
+                        moveToTarget();
+                        gridGui.updateAlienPosition(x, y);
+
+                    }
+                });
             }
         });
     }
 
     private void sendProposalBehaviour() {
-        // waker behaviour
-        addBehaviour(new TickerBehaviour(this, 10000) {
-            protected void onTick() {
-                if (!responseToTheProposal) {
+        addBehaviour(new OneShotBehaviour() {
+            public void action() {
                     ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
                     msg.addReceiver(new AID("rover", AID.ISLOCALNAME));
                     msg.setContent("Let's collaborate");
                     msg.setConversationId("Alien-Rover-Proposal");
                     send(msg);
                     System.out.println("AlienAgent sent a proposal to rover.");
-                }
             }
         });
     }
@@ -75,11 +85,6 @@ public class Alien extends Agent {
                         System.out.println("AlienAgent received proposal rejection: " + msg.getContent());
                         System.out.println("Nobody wants me! I'm going to a new target.");
                         setNewRandomtargets();
-                        responseToTheProposal = true;
-                        if (isAtTarget()) {
-                            setNewRandomtargets();
-                            moveToTargetBehaviour();
-                        }
                     } else {
                         block();
                     }
