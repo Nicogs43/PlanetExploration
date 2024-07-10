@@ -27,10 +27,6 @@ public class RoverAgent extends Agent {
     public GridGUI gridGUI;
 
     protected void setup() {
-        // grid = new Grid(10, 10);
-        // gridGUI = new GridGUI(grid);
-        // take the grid from the main container
-        System.out.println("Rover-agent " + getAID().getName() + " is ready.");
         Object[] args = getArguments();
         if (args == null || args.length < 2) {
             System.out.println("Invalid arguments. Please provide the grid and gridGUI objects.");
@@ -58,7 +54,7 @@ public class RoverAgent extends Agent {
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
                     String senderName = msg.getSender().getLocalName();
-                    if (senderName.equals("rover") || senderName.equals(droneName)) {
+                    if (senderName.equals("rover") || senderName.equals(droneName)) { // check which is the sender agent
                         gridGUI.printMessageColored("Received a messagge from:" + senderName, Color.GREEN);
                         ACLMessage reply = msg.createReply();
                         reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
@@ -113,7 +109,7 @@ public class RoverAgent extends Agent {
                     }
                     moveToTarget();
                     gridGUI.updateRoverPosition(x, y);
-                    if (x == targetX && y == targetY) {
+                    if (x == targetX && y == targetY) { //if the target is reached then the rover stops
                         isMovingToTarget = false;
                         isDroneLaunched = false;
                         x = targetX;
@@ -177,8 +173,7 @@ public class RoverAgent extends Agent {
     }
 
     private void receiveDroneLandingMessage() {
-        // beahviour to receive the message from the ground control that the drone has
-        // landed
+        // beahviour to receive the message from the ground control that the drone has landed
         addBehaviour(new CyclicBehaviour() {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -198,7 +193,6 @@ public class RoverAgent extends Agent {
     }
 
     private void updateDroneInGridGUI() {
-        // TODO: add the behaviour to update the drone in GRIDGUI
         addBehaviour(new CyclicBehaviour() {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
@@ -206,14 +200,10 @@ public class RoverAgent extends Agent {
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
                     String content = msg.getContent();
-                    // System.out.println("Received new coordinates from Rover: " + content);
                     if (content.contains(",")) {
                         String[] parts = content.split(",");
                         int droneX = Integer.parseInt(parts[0].trim());
                         int droneY = Integer.parseInt(parts[1].trim());
-                        // gridGUI.printMessageColored("Drone is at position (" + droneX + "," + droneY
-                        // + ")", Color.RED);
-                        // System.out.println("Drone is at position (" + droneX + "," + droneY + ")");
                         gridGUI.updateDronePosition(droneX, droneY);
                     } else {
                         System.out.println("Invalid coordinates received.");
@@ -227,7 +217,7 @@ public class RoverAgent extends Agent {
     }
 
     private void handleLaunchHelidrone() {
-        // add a cyclic behaviour to receive the message if launch the helidrone
+        //  a cyclic behaviour to receive the message if launch the helidrone
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -331,7 +321,6 @@ public class RoverAgent extends Agent {
 
     protected void takeDown() {
         System.out.println("Rover-agent " + getAID().getName() + " is shutting down.");
-        // GridGUI gridGUI = new GridGUI(grid);
     }
 
     private class ReceivedShutdown extends CyclicBehaviour {

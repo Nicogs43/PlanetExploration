@@ -117,6 +117,7 @@ public class Alien extends Agent {
     // Method to perform tasks upon acceptance of the proposal
     private void performCollaborationTasks() {
         addBehaviour(new OneShotBehaviour() {
+        // it is a simply toy-behaivour to show the collaboration. No one reply to the alien
             public void action() {
                 // Example task: Send a confirmation message back to the rover
                 ACLMessage confirmMsg = new ACLMessage(ACLMessage.INFORM);

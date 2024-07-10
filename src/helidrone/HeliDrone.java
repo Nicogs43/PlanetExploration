@@ -51,7 +51,7 @@ public class HeliDrone extends Agent {
         ParallelBehaviour parallelBehaviour = new ParallelBehaviour(ParallelBehaviour.WHEN_ANY);
 
         // TickerBehaviour to move the drone at regular intervals
-        TickerBehaviour ticker = new TickerBehaviour(this, 400) { // 300 ms interval
+        TickerBehaviour ticker = new TickerBehaviour(this, 400) { // 400 ms interval
             protected void onTick() {
                 int newX, newY;
                 do {
@@ -71,7 +71,7 @@ public class HeliDrone extends Agent {
             }
         };
 
-        // WakerBehaviour to stop the movement after 1.5 seconds
+        // WakerBehaviour to stop the movement after 2 seconds
         WakerBehaviour waker = new WakerBehaviour(this, 2000) {
             protected void onWake() {
                 heliDroneGUI.printMessage("HeliDrone has stopped moving.");
@@ -94,7 +94,6 @@ public class HeliDrone extends Agent {
         msg.setContent(x + "," + y);
         msg.setConversationId("Drone-Grid-Update");
         send(msg);
-        //heliDroneGUI.printMessage("HeliDrone: Requesting Grid Update." + x + "," + y);
     }
     // send the request for the new coordinates to the rover agent
     public void requestNewCoordinates() {
