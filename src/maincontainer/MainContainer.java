@@ -11,7 +11,6 @@ import gui.GridGUI;
 
 public class MainContainer {
     public static void main(String[] args) {
-        System.out.println("Hello World!");
         Runtime rt = Runtime.instance();
         Profile p = new ProfileImpl();
         AgentContainer mainContainer = rt.createMainContainer(p);
@@ -20,9 +19,12 @@ public class MainContainer {
             Grid grid = new Grid(10, 10);
             GridGUI gridGui = new GridGUI(grid);
 
-            AgentController roverAgent = mainContainer.createNewAgent("rover", "rover.RoverAgent", new Object[] {grid, gridGui});
-            AgentController GroundControlAgent = mainContainer.createNewAgent("groundcontrol", "groundcontrol.GroundControl", null);
-            AgentController alienAgent = mainContainer.createNewAgent("alien", "alien.Alien", new Object[] {grid, gridGui});
+            AgentController roverAgent = mainContainer.createNewAgent("rover", "rover.RoverAgent",
+                    new Object[] { grid, gridGui });
+            AgentController GroundControlAgent = mainContainer.createNewAgent("groundcontrol",
+                    "groundcontrol.GroundControl", null);
+            AgentController alienAgent = mainContainer.createNewAgent("alien", "alien.Alien",
+                    new Object[] { grid, gridGui });
             roverAgent.start();
             GroundControlAgent.start();
             alienAgent.start();
@@ -32,5 +34,3 @@ public class MainContainer {
 
     }
 }
-
-

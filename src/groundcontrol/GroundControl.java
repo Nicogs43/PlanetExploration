@@ -49,7 +49,6 @@ public class GroundControl extends Agent {
 
     }
 
-    // make get and setter also for targetY
     public int getTargetY() {
         return targetY;
     }
@@ -124,9 +123,7 @@ public class GroundControl extends Agent {
             ACLMessage msg = receive(mt);
             if (msg != null) {
                 String messageContent = msg.getContent();
-                // System.out.println("Confirmed message: " + messageContent);
                 textArea.printMessage("Confirmed message: " + messageContent);
-                setTargetGUI();
             } else {
                 block();
             }

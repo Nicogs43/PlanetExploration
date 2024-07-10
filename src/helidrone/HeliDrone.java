@@ -23,18 +23,18 @@ public class HeliDrone extends Agent {
     private int[] lastKnownCoordinates = new int[2];
 
     protected void setup() {
-        //grid = new Grid(10, 10);
-        //get the arguments from the rover agent
         Object[] args = getArguments();
         grid = (Grid) args[0];
         heliDroneGUI = new HeliDroneGUI();
-        // create a simple behaviour that print out that the drone is created and ready
+        startDroneOperations();
+    }
+
+    private void startDroneOperations() {
         addBehaviour(new OneShotBehaviour() {
             public void action() {
                 heliDroneGUI.printMessage("Hello! HeliDrone: " + getAID().getName() + " is ready.");
                 takeOff();
                 moveAround();
-                //land();
             }
 
         });
@@ -139,14 +139,14 @@ public class HeliDrone extends Agent {
             protected void onWake() {
                 heliDroneGUI.printMessage("HeliDrone is landing at position (" + lastKnownCoordinates[0] + ","
                         + lastKnownCoordinates[1] + ")");
-                droneShutDown shutdown = new droneShutDown();
-                addBehaviour(shutdown);
                 //send an message to the rover agent that the drone has landed and so delete the icon in GridGUI
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                 msg.addReceiver(new AID("rover", AID.ISLOCALNAME));
                 msg.setContent("Drone has landed");
                 msg.setConversationId("Drone-Landed");
-                send(msg);
+                send(msg);                
+                droneShutDown shutdown = new droneShutDown();
+                addBehaviour(shutdown);
             }
         });
     }

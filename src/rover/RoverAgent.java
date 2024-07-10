@@ -57,13 +57,25 @@ public class RoverAgent extends Agent {
                         MessageTemplate.MatchConversationId("Alien-Rover-Proposal"));
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
-                    gridGUI.printMessageColored("Someone or something try to communicate with me. So scary! " + msg.getContent(), Color.RED);
-                    ACLMessage reply = msg.createReply();
-                    reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-                    reply.setConversationId("Rover-Alien-Rej-Proposal");
-                    reply.setContent("Who are you? I'm busy.");
-                    send(reply);
-                    gridGUI.printMessageColored("Proposal rejected", Color.RED);
+                    String senderName = msg.getSender().getLocalName();
+                    if (senderName.equals("rover") || senderName.equals(droneName)) {
+                        gridGUI.printMessageColored("Received a messagge from:" + senderName, Color.GREEN);
+                        ACLMessage reply = msg.createReply();
+                        reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                        reply.setConversationId("Rover-Accept-Proposal");
+                        reply.setContent("I'm the rover. I accept your proposal.");
+                        send(reply);
+                    } else {
+                        gridGUI.printMessageColored(
+                                "Someone or something try to communicate with me. So scary! ",
+                                Color.RED);
+                        ACLMessage reply = msg.createReply();
+                        reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+                        reply.setConversationId("Rover-Alien-Rej-Proposal");
+                        reply.setContent("Who are you? I'm busy.");
+                        send(reply);
+                        gridGUI.printMessageColored("Proposal rejected", Color.RED);
+                    }
                 } else {
                     block();
                 }
@@ -118,14 +130,7 @@ public class RoverAgent extends Agent {
                             // send a message to the helidrone to move to the new coordinates
                             addBehaviour(new WakerBehaviour(myAgent, 2000) {
                                 protected void onWake() {
-                                    // send a message that the rover is finished digging
-                                    ACLMessage digFinishedMsg = new ACLMessage(ACLMessage.INFORM);
-                                    digFinishedMsg.addReceiver(new AID("GroundControl", AID.ISLOCALNAME));
-                                    digFinishedMsg.setConversationId("Rover-Dig-Finished");
-                                    digFinishedMsg.setContent("Rover has finished digging at (" + x + "," + y + ")");
-                                    send(digFinishedMsg);
-                                    gridGUI.printMessageColored("Here rover to Ground control: I finished digging.",
-                                            Color.RED);
+                                    notifyDigCompletion();
                                     addBehaviour(new WakerBehaviour(myAgent, 3000) {
                                         protected void onWake() {
                                             Random random = new Random();
@@ -134,21 +139,34 @@ public class RoverAgent extends Agent {
                                             String foundItem = findings[index];
                                             gridGUI.printMessageColored("Analysis complete, found: " + foundItem,
                                                     Color.RED);
+                                            notifyGroundControlOfAnalysisResult(foundItem);
+                                            addBehaviour(new WakerBehaviour(myAgent, 5000) {
+                                                protected void onWake() {
+                                                    notifyGroundControlOfWorkCompletion();
+                                                }
+                                            });
+                                        }
 
+                                        private void notifyGroundControlOfAnalysisResult(String foundItem) {
                                             // Notify ground control of analysis result
                                             ACLMessage analysisMsg = new ACLMessage(ACLMessage.INFORM);
                                             analysisMsg.addReceiver(new AID("GroundControl", AID.ISLOCALNAME));
                                             analysisMsg.setConversationId("Rover-Analysis-Result");
                                             analysisMsg.setContent(foundItem);
                                             send(analysisMsg);
-
-                                            addBehaviour(new WakerBehaviour(myAgent, 5000) {
-                                                protected void onWake() {
-                                                    notifyGroundControlDigFinished();
-                                                }
-                                            });
                                         }
                                     });
+                                }
+
+                                private void notifyDigCompletion() {
+                                    // send a message that the rover is finished digging
+                                    ACLMessage digFinishedMsg = new ACLMessage(ACLMessage.INFORM);
+                                    digFinishedMsg.addReceiver(new AID("GroundControl", AID.ISLOCALNAME));
+                                    digFinishedMsg.setConversationId("Rover-Dig-Finished");
+                                    digFinishedMsg.setContent("Rover has finished digging at (" + x + "," + y + ")");
+                                    send(digFinishedMsg);
+                                    gridGUI.printMessageColored("Here rover to Ground control: I finished digging.",
+                                            Color.RED);
                                 }
                             });
                         }
@@ -159,7 +177,8 @@ public class RoverAgent extends Agent {
     }
 
     private void receiveDroneLandingMessage() {
-        //beahviour to receive the message from the ground control that the drone has landed
+        // beahviour to receive the message from the ground control that the drone has
+        // landed
         addBehaviour(new CyclicBehaviour() {
             public void action() {
                 MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -280,7 +299,7 @@ public class RoverAgent extends Agent {
         try {
             droneName = "HeliDrone" + System.currentTimeMillis(); // unique name
             droneAgent = container.createNewAgent(droneName,
-                    "helidrone.HeliDrone", new Object[]{this.grid});
+                    "helidrone.HeliDrone", new Object[] { this.grid });
             droneAgent.start();
             gridGUI.printMessageColored("Drone agent launched: " + droneName, Color.RED);
         } catch (ControllerException e) {
@@ -299,7 +318,7 @@ public class RoverAgent extends Agent {
         gridGUI.printMessageColored("Here rover to HeliDrone: I'm at position (" + x + "," + y + ").", Color.RED);
     }
 
-    private void notifyGroundControlDigFinished() {
+    private void notifyGroundControlOfWorkCompletion() {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.addReceiver(new AID("groundcontrol", AID.ISLOCALNAME));
         msg.setConversationId("Rover-work-Finished");
@@ -312,9 +331,7 @@ public class RoverAgent extends Agent {
 
     protected void takeDown() {
         System.out.println("Rover-agent " + getAID().getName() + " is shutting down.");
-        GridGUI gridGUI = new GridGUI(grid);
-        gridGUI.printMessageColored("Rover-agent " + getAID().getName() + " is shutting down.", Color.RED);
-        gridGUI.dispose();
+        // GridGUI gridGUI = new GridGUI(grid);
     }
 
     private class ReceivedShutdown extends CyclicBehaviour {
@@ -324,6 +341,8 @@ public class RoverAgent extends Agent {
                     MessageTemplate.MatchConversationId("GroundControl-Shutdown"));
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
+                gridGUI.printMessageColored("Rover-agent " + getAID().getName() + " is shutting down.", Color.RED);
+                gridGUI.dispose();
                 myAgent.doDelete();
             } else {
                 block();
