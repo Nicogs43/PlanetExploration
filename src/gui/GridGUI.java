@@ -11,7 +11,6 @@ import environment.Grid;
 
 public class GridGUI extends JFrame {
     private Grid grid;
-    // private JTextArea textArea;
     private JPanel[][] cellPanels; // 2D array to store references to cell panels
     private JTextPane textPane;
     private StyledDocument doc;

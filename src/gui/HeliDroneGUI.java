@@ -13,11 +13,8 @@ public class HeliDroneGUI extends JFrame{
     private JTextArea textArea;
 
     public HeliDroneGUI() {
-        // Set the title of the frame
         setTitle("Helicopter Drone Output");
-        // Set the default close operation
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        // Set the layout of the frame
         setLayout(new BorderLayout());
 
         // Initialize the text area

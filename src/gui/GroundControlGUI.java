@@ -12,7 +12,6 @@ public class GroundControlGUI extends JFrame {
     private JTextField targetXField;
     private JTextField targetYField;
     private JButton setTargetButton;
-    // private JButton launchDroneButton;
     private GroundControl GroundControl;
     public int targetX, targetY;
 
@@ -62,7 +61,6 @@ public class GroundControlGUI extends JFrame {
                 GroundControl.addBehaviour(new OneShotBehaviour(GroundControl) {
                     public void action() {
                         System.out.println("Target coordinates set to: (" + targetX + "," + targetY + ")");
-                        // You can add other actions here like sending these coordinates to other agents
                         GroundControl.sendNewTarget(targetX, targetY);
                         GroundControl.setTargetX(targetX);
                         GroundControl.setTargetY(targetY);
@@ -90,7 +88,7 @@ public class GroundControlGUI extends JFrame {
             GroundControl.addBehaviour(new OneShotBehaviour(GroundControl) {
                 public void action() {
                     System.out.println("HeliDrone launch initiated.");
-                    GroundControl.LaunchHeliDrone(); // Assume this method is defined in your agent
+                    GroundControl.LaunchHeliDrone(); 
                 }
             });
         }
