@@ -220,7 +220,7 @@ public class RoverAgent extends Agent {
         //  a cyclic behaviour to receive the message if launch the helidrone
         addBehaviour(new CyclicBehaviour(this) {
             public void action() {
-                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
                         MessageTemplate.MatchConversationId("GroundControl-Launch-Helidrone"));
                 ACLMessage msg = receive(mt);
                 if (msg != null) {

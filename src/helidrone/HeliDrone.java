@@ -114,7 +114,6 @@ public class HeliDrone extends Agent {
                 ACLMessage msg = receive(mt);
                 if (msg != null) {
                     String content = msg.getContent();
-
                     // process the message and store the last known coordinates of the rover agent
                     if (content.contains(",")) {
                         String[] parts = content.split(",");

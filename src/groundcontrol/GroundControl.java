@@ -72,7 +72,7 @@ public class GroundControl extends Agent {
 
     public void LaunchHeliDrone() {
         // Create a new ACLMessage to send to the rover
-        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
         msg.addReceiver(new AID("rover", AID.ISLOCALNAME));
         msg.setConversationId("GroundControl-Launch-Helidrone");
         msg.setContent("launch-helidrone");
