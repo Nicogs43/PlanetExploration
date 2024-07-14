@@ -20,7 +20,6 @@ public class Alien extends Agent {
     private Random random = new Random();
     private int x, y;
     private int targetX, targetY;
-    // boolean responseToTheProposal = false;
 
     protected void setup() {
         Object[] args = getArguments();

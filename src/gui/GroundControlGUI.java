@@ -15,7 +15,6 @@ public class GroundControlGUI extends JFrame {
     private GroundControl GroundControl;
     public int targetX, targetY;
 
-
     public GroundControlGUI(GroundControl agent) {
         this.GroundControl = agent;
 
@@ -32,7 +31,6 @@ public class GroundControlGUI extends JFrame {
         inputPanel.add(targetYField);
 
         mainPanel.add(inputPanel, BorderLayout.CENTER);
-
 
         setTargetButton = new JButton("Set Target Coordinates");
         setTitle("Ground Control");
@@ -88,7 +86,7 @@ public class GroundControlGUI extends JFrame {
             GroundControl.addBehaviour(new OneShotBehaviour(GroundControl) {
                 public void action() {
                     System.out.println("HeliDrone launch initiated.");
-                    GroundControl.LaunchHeliDrone(); 
+                    GroundControl.LaunchHeliDrone();
                 }
             });
         }
@@ -96,4 +94,3 @@ public class GroundControlGUI extends JFrame {
     }
 
 }
-

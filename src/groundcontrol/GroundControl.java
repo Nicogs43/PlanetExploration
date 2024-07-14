@@ -14,7 +14,6 @@ import gui.*;
 
 public class GroundControl extends Agent {
     private int targetX, targetY = 0;
-    // private Scanner scanner = new Scanner(System.in);
     private List<Behaviour> activeBehaviours = new ArrayList<>();
     public TextAreaGC textArea;
 
@@ -137,8 +136,6 @@ public class GroundControl extends Agent {
                     MessageTemplate.MatchConversationId("Rover-Target-Reach"));
             ACLMessage msg = myAgent.receive(mtReach);
             if (msg != null) {
-                // Existing message handling
-                //System.out.println("Received: " + msg.getContent());
                 textArea.printMessage("Received: " + msg.getContent());
             } else {
                 block();
@@ -153,8 +150,6 @@ public class GroundControl extends Agent {
                     MessageTemplate.MatchConversationId("Rover-Dig-Finished"));
             ACLMessage msg = myAgent.receive(mtDig);
             if (msg != null) {
-                // Existing message handling
-                //System.out.println("Received: " + msg.getContent());
                 textArea.printMessage("Received: " + msg.getContent());
             } else {
                 block();
@@ -171,18 +166,13 @@ public class GroundControl extends Agent {
             if (msg != null) {
                 switch (msg.getContent()) {
                     case "stone":
-                        //System.out.println("The rover found a stone, Yet another stone.");
                         textArea.printMessage("The rover found a stone, Yet another stone." );
                         break;
                     case "water":
-                        //System.out.println("The rover found water. Interesting, water is the basis of our life.");
                         textArea.printMessage("The rover found water. Interesting, water is the basis of our life.");
                         break;
                     case "unknown manufacture":
                         textArea.printMessage("The rover found an unknown manufacture, Very intersting. the rover will start to dig again.");
-                        //System.out.println(
-                        //        "The rover found an unknown manufacture, Very intersting. the rover will start to dig again.");
-
                     default:
                         break;
                 }
@@ -194,7 +184,6 @@ public class GroundControl extends Agent {
 
     // Method to send new target coordinates to the rover
     public void sendNewTarget(int newTargetX, int newTargetY) {
-        //System.out.println("Sending new target coordinates to Rover: (" + newTargetX + "," + newTargetY + ")");
         textArea.printMessage("Sending new target coordinates to Rover: (" + newTargetX + "," + newTargetY + ")");
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
         msg.setConversationId("GroundControl-Target-Coordinates");
