@@ -12,6 +12,8 @@ Welcome to the Planet Exploration Multi-Agent System repository. This project, f
 - **lib/**: Contains the JADE library and its dependencies.
 - **images/**: Images of icons.
 - **bin/**: the compiled output files will be generated in the `bin` folder by default.
+- **Report.docx**: Report about this project
+- **Report.pdf**: Report in its pdf version
 - **makefile**: make file to compile and run the project.
 - **README.md**: Project overview and setup instructions.
 
